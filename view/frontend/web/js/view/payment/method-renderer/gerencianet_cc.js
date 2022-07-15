@@ -118,18 +118,12 @@ define([
 						return false;
 					}
 
-					if (result.card !== null) {
-						if (isGenerateCardHash()) {
-							self.getCardHash(identificadorConta, url);
-						}
+					if (result.card !== null) {						
 						self.selectedCardType(result.card.type);
 						creditCardData.creditCard = result.card;
 					}
 
-					if (result.isValid) {
-						if (isGenerateCardHash()) {
-							self.getCardHash(identificadorConta, url);
-						}
+					if (result.isValid) {						
 						creditCardData.creditCardNumber = value;
 						self.creditCardType(result.card.type);
 					}
@@ -140,19 +134,21 @@ define([
 				});
 
 				//Set expiration year to credit card data object
-				this.creditCardExpYear.subscribe(function (value) {
-					if (isGenerateCardHash()) {
+				this.creditCardExpYear.subscribe(function (value) {					
+					creditCardData.expirationYear = value;
+
+                    if (isGenerateCardHash()) {
 						self.getCardHash(identificadorConta, url);
 					}
-					creditCardData.expirationYear = value;
 				});
 
 				//Set expiration month to credit card data object
-				this.creditCardExpMonth.subscribe(function (value) {
-					if (isGenerateCardHash()) {
+				this.creditCardExpMonth.subscribe(function (value) {					
+					creditCardData.expirationMonth = value;
+
+                    if (isGenerateCardHash()) {
 						self.getCardHash(identificadorConta, url);
 					}
-					creditCardData.expirationMonth = value;
 				});
 
 				//Set cvv code to credit card data objtotalect
@@ -174,29 +170,19 @@ define([
 						element.style.display = "none";
 					} else {
 						element.style.display = null;
-					}
-
-					self.cardHash(
-						document.getElementById("gerencianet_cc_card_hash").value
-					);
+					}					
 				});
 
 				this.creditCardMobilePhone.subscribe(function () {
 					if (isGenerateCardHash()) {
 						self.getCardHash(identificadorConta, url);
-					}
-					self.cardHash(
-						document.getElementById("gerencianet_cc_card_hash").value
-					);
+					}					
 				});
 
 				this.creditCardOwnerName.subscribe(function () {
 					if (isGenerateCardHash()) {
 						self.getCardHash(identificadorConta, url);
-					}
-					self.cardHash(
-						document.getElementById("gerencianet_cc_card_hash").value
-					);
+					}					
 				});
 
 				function isGenerateCardHash() {
@@ -210,6 +196,9 @@ define([
 			},
 
 			getCardHash: function (identificadorConta, url) {
+
+                fullScreenLoader.startLoader();
+
 				this.loadGerencianet(identificadorConta, url);
 
 				var callback = function (error, response) {
@@ -220,11 +209,10 @@ define([
 						// Insere o hash do cartao no input hidden
 						document.getElementById("gerencianet_cc_card_hash").value = response.data.payment_token;
 					}
+                    fullScreenLoader.stopLoader();
 				}
 
-				var fnc = function (checkout) {
-					console.log("entrou em 2");
-
+				var fnc = function (checkout) {					
 					checkout.getPaymentToken( 
 						{
 							brand: creditCardData.creditCard.title.toLowerCase(), // bandeira do cartão
@@ -236,8 +224,12 @@ define([
 						callback
 					);
 				}
-
-				$gn.ready(fnc);
+                
+				if ($gn.checkout) {
+                    fnc($gn.checkout);
+                } else {
+                    $gn.ready(fnc);
+                }
 			},
 
 			loadGerencianet: function (identificadorConta, url) {
@@ -270,6 +262,9 @@ define([
 
 			
 			getData: function () {
+
+                this.cardHash(document.getElementById("gerencianet_cc_card_hash").value);
+                
 				return {
 					method: this.item.method,
 					additional_data: {
@@ -533,3 +528,4 @@ define([
 		});
 	}
 );
+
